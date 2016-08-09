@@ -94,25 +94,12 @@ public final class ContentProvider {
     public static void generateXcConfigContent(File file, boolean isTest, Configuration config) {
         ContentWriter w = new ContentWriter(file);
         String sourceSet = isTest ? "test" : "main";
-        w.wl("// Create sections from the art and oat files.");
-        w.wl("MOE_SECT_OAT = -sectcreate __OATDATA __oatdata \"${SRCROOT}/" + config.getRelativePathToBuildDir() + "/moe/" + sourceSet +
-                "/xcode/${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${arch}.oat\"");
-        w.wl("MOE_SECT_ART = -sectcreate __ARTDATA __artdata \"${SRCROOT}/" + config.getRelativePathToBuildDir() + "/moe/" + sourceSet +
-                "/xcode/${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${arch}.art\"");
+
+        w.wl("// Force load generated native libraries.");
+        w.wl("MOE_NATIVES = -force_load \"" + config.getRelativePathToBuildDir() + "/moe/" + sourceSet +
+                "/xcode/${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/${arch}.a\"");
         w.nl();
-        w.wl("// Set the maximum and initial virtual memory protection for the segments.");
-        w.nl();
-        w.wl("MOE_SEGPROT[sdk=iphoneos*] = -segprot __OATDATA rx rx -segprot __ARTDATA rw rw");
-        w.wl("MOE_SEGPROT[sdk=iphonesimulator*] = -segprot __OATDATA rwx rx -segprot __ARTDATA rwx rw");
-//        w.wl("MOE_SEGPROT[sdk=appletvos*] = -segprot __OATDATA rx rx -segprot __ARTDATA rw rw");
-//        w.wl("MOE_SEGPROT[sdk=appletvsimulator*] = -segprot __OATDATA rwx rx -segprot __ARTDATA rwx rw");
-        w.nl();
-        w.wl("// Set the __PAGEZERO segment size.");
-        w.wl("MOE_PAGEZERO[sdk=iphoneos*] =");
-        w.wl("MOE_PAGEZERO[sdk=iphonesimulator*] = -pagezero_size 4096");
-//        w.wl("MOE_PAGEZERO[sdk=appletvos*] =");
-//        w.wl("MOE_PAGEZERO[sdk=appletvsimulator*] = -pagezero_size 4096");
-        w.nl();
+
         w.wl("// Set frameworks paths.");
         IdentityHashMap<Enum, List<String>> properties = config.getDependenciesManifestsProperties();
 
@@ -135,7 +122,7 @@ public final class ContentProvider {
             }
         }
         customLDFlags += " -framework Foundation -framework UIKit";
-        
+
         customLDFlags += " -L" + config.getRelativePathToBuildDir() + "/libs/static";
         customLDFlags += " -L" + config.getRelativePathToBuildDir() + "/libs/static/${PLATFORM_NAME}";
         customLDFlags += " -F" + config.getRelativePathToBuildDir() + "/libs/static";
@@ -145,10 +132,8 @@ public final class ContentProvider {
 
         w.wl(customLDFlags);
         w.nl();
-        w.wl("MOE_OTHER_LDFLAGS = ${MOE_SECT_OAT} ${MOE_SECT_ART} ${MOE_SEGPROT} ${MOE_PAGEZERO} ${MOE_CUSTOM_OTHER_LDFLAGS} -lstdc++");
+        w.wl("MOE_OTHER_LDFLAGS = ${MOE_NATIVES} ${MOE_CUSTOM_OTHER_LDFLAGS} -lstdc++");
         w.nl();
-        w.wl("// Disable BitCode.");
-        w.wl("ENABLE_BITCODE = NO");
         w.close();
     }
 

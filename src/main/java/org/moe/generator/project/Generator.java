@@ -343,23 +343,45 @@ public final class Generator {
         testPreregister_txtRef.setSourceTree(SOURCE_TREE_PROJECT);
         createBuildFile(testPreregister_txt.getFileRef(), testResBPRef.getReferenced());
 
-        // application.jar in Main target
-        FileResult mainApplication_jar = mainTarget.createFile("application.jar", null, "", SOURCE_TREE_GROUP);
-        mainTarget.getSupportingFilesGroup().getChildren().add(mainApplication_jar.getFileRef());
-        PBXFileReference mainApplication_jarRef = mainApplication_jar.getFileRef().getReferenced();
-        mainApplication_jarRef.setPath(relativePathToBuildDir + "moe/main/application.jar");
-        mainApplication_jarRef.setName("application.jar");
-        mainApplication_jarRef.setSourceTree(SOURCE_TREE_PROJECT);
-        createBuildFile(mainApplication_jar.getFileRef(), mainResBPRef.getReferenced());
+        class JarResource {
+            public String name;
+            public String path;
 
-        // application.jar in Test target
-        FileResult testApplication_jar = testTarget.createFile("application.jar", null, "", SOURCE_TREE_GROUP);
-        testTarget.getSupportingFilesGroup().getChildren().add(testApplication_jar.getFileRef());
-        PBXFileReference testApplication_jarRef = testApplication_jar.getFileRef().getReferenced();
-        testApplication_jarRef.setPath(relativePathToBuildDir + "moe/test/application.jar");
-        testApplication_jarRef.setName("application.jar");
-        testApplication_jarRef.setSourceTree(SOURCE_TREE_PROJECT);
-        createBuildFile(testApplication_jar.getFileRef(), testResBPRef.getReferenced());
+            public JarResource(String name, String path) {
+                this.name = name;
+                this.path = path;
+            }
+        }
+
+        // .jar files in Main target
+        for (JarResource jar : new JarResource[] {
+                new JarResource("application.jar", relativePathToBuildDir + "moe/main/application.jar"),
+                new JarResource("classes.jar", relativePathToBuildDir + "moe/main/$(CONFIGURATION)/classes.jar"),
+                new JarResource("moe-ios-dex.jar", relativePathToBuildDir + "moe/moe-ios-dex.jar"),
+        }) {
+            FileResult mainApplication_jar = mainTarget.createFile(jar.name, null, "", SOURCE_TREE_GROUP);
+            mainTarget.getSupportingFilesGroup().getChildren().add(mainApplication_jar.getFileRef());
+            PBXFileReference mainApplication_jarRef = mainApplication_jar.getFileRef().getReferenced();
+            mainApplication_jarRef.setPath(jar.path);
+            mainApplication_jarRef.setName(jar.name);
+            mainApplication_jarRef.setSourceTree(SOURCE_TREE_PROJECT);
+            createBuildFile(mainApplication_jar.getFileRef(), mainResBPRef.getReferenced());
+        }
+
+        // .jar files in Test target
+        for (JarResource jar : new JarResource[] {
+                new JarResource("application.jar", relativePathToBuildDir + "moe/test/application.jar"),
+                new JarResource("classes.jar", relativePathToBuildDir + "moe/test/$(CONFIGURATION)/classes.jar"),
+                new JarResource("moe-ios-dex.jar", relativePathToBuildDir + "moe/moe-ios-dex.jar"),
+        }) {
+            FileResult testApplication_jar = testTarget.createFile(jar.name, null, "", SOURCE_TREE_GROUP);
+            testTarget.getSupportingFilesGroup().getChildren().add(testApplication_jar.getFileRef());
+            PBXFileReference testApplication_jarRef = testApplication_jar.getFileRef().getReferenced();
+            testApplication_jarRef.setPath(jar.path);
+            testApplication_jarRef.setName(jar.name);
+            testApplication_jarRef.setSourceTree(SOURCE_TREE_PROJECT);
+            createBuildFile(testApplication_jar.getFileRef(), testResBPRef.getReferenced());
+        }
 
         // classlist.txt in Test target
         FileResult testClasses_txt = testTarget.createFile("classlist.txt", null, "", SOURCE_TREE_GROUP);
