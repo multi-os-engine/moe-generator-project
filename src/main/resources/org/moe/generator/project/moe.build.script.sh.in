@@ -61,6 +61,11 @@ fi
 # Copy and sign MOE framework
 rsync -av --filter "- CVS/" --filter "- .svn/" --filter "- .git/" --filter "- .hg/" --filter "- Headers" --filter "- PrivateHeaders" --filter "- Modules" \
     "${MOE_FRAMEWORK_PATH}/MOE.framework" "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
+# Strip the bitcode section & segment as would be done when STRIP_BITCODE_FROM_COPIED_FILES is enabled
+if [ "${STRIP_BITCODE_FROM_COPIED_FILES}" != "NO" ]; then
+	xcrun bitcode_strip -r "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MOE.framework/MOE" -o "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MOE.framework/MOE"
+fi
+
 if [ -n "${EXPANDED_CODE_SIGN_IDENTITY}" -a "${CODE_SIGNING_REQUIRED}" != "NO" -a "${CODE_SIGNING_ALLOWED}" != "NO" ]; then
     /usr/bin/codesign --force --sign $EXPANDED_CODE_SIGN_IDENTITY $OTHER_CODE_SIGN_FLAGS \
         --preserve-metadata=identifier,entitlements "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MOE.framework"
